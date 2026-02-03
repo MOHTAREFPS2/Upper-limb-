@@ -148,7 +148,7 @@
         <h1>Anatomy - exam ( Upper limb )</h1>
         <div class="form-group">
             <label>الاسم الثلاثي (Full Name):</label>
-            <input type="text" id="studentName" placeholder="مثال: محمد أحمد علي">
+            <input type="text" id="studentName" placeholder="مثال: محمد حسين احمد">
         </div>
         <div class="form-group">
             <label>معرف التيليجرام (Telegram User):</label>
@@ -365,42 +365,6 @@
 
         function saveAnswer(questionId, answer) {
             userAnswers[questionId] = answer;
-        }
-
-        // === كود الحماية الصارم (Page Visibility API) ===
-        // يتم تفعيله فقط إذا كان الامتحان قد بدأ (examStarted = true)
-        document.addEventListener("visibilitychange", function() {
-            if (examStarted && document.hidden) {
-                // المستخدم غادر الصفحة (Home, Tab switch, Minimize)
-                terminateExamDueToCheating();
-            }
-        });
-
-        // دالة إنهاء الامتحان بسبب الغش
-        function terminateExamDueToCheating() {
-            examStarted = false; // إيقاف المراقبة لتجنب التكرار
-            
-            // إخفاء الامتحان وإظهار رسالة الرسوب
-            document.getElementById('examPanel').classList.add('hidden');
-            document.getElementById('resultPanel').classList.remove('hidden');
-            
-            document.getElementById('resultTitle').innerText = "تم إلغاء الامتحان ❌";
-            document.getElementById('resultTitle').style.color = "red";
-            document.getElementById('resultMessage').innerHTML = `
-                لقد قمت بالخروج من صفحة الامتحان.<br>
-                تعتبر <strong>راسباً</strong> (درجة صفر) لمحاولة الغش.<br>
-                تم إرسال تقرير بالحالة.
-            `;
-
-            // إرسال تقرير الغش (درجة صفر)
-            const templateParams = {
-                student_name: studentInfo.name,
-                telegram_id: studentInfo.telegram,
-                final_score: "0 (Cheating Detected - Left App)",
-                total_questions: questions.length
-            };
-
-            emailjs.send(SERVICE_ID, TEMPLATE_ID, templateParams);
         }
 
         async function submitExam() {
