@@ -17,7 +17,7 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: #f0f2f5;
             margin: 0;
-            padding: 20px;
+            padding: 30px;
             color: #1c1e21;
             user-select: none; /* يمنع تحديد النص */
             -webkit-user-select: none;
@@ -51,7 +51,7 @@
             display: block;
             margin-bottom: 10px;
             font-weight: bold;
-            font-size: 16px;
+            font-size: 18px;
         }
         input[type="text"] {
             width: 100%;
@@ -137,7 +137,7 @@
 <body oncontextmenu="return false;">
 
     <div class="container" id="loginPanel">
-        <h1>Anatomy - Upper limb exam</h1>
+        <h1>Anatomy - exam ( Upper limb )</h1>
         <div class="form-group">
             <label>الاسم الثلاثي (Full Name):</label>
             <input type="text" id="studentName" placeholder="مثال: محمد أحمد علي">
@@ -276,22 +276,45 @@
             { id: 98, text: "98. Winged scapula result from injury of the:", type: "mcq", options: ["a- Axillary nerve", "b- Suprascapular nerve", "c- Upper subscapular nerve", "d- Long thoracic nerve", "e- Thoracodorsal nerve"], correct: "d- Long thoracic nerve" },
             { id: 99, text: "99. The medial (ulnar collateral) ligament:", type: "mcq", options: ["a- Its anterior band passes from the medial epicondyle of the humerus to the anterior margin of the coronoid process", "b- Its posterior band passes from the medial epicondyle of the humerus to the posterior side of the olecranon", "c- a & b", "d- Its transverse band passes between the ulnar attachments of the anterior & posterior bands", "e- None of the above"], correct: "c- a & b" },
             { id: 100, text: "100. Deep branch of the ulnar nerve:", type: "mcq", options: ["a- Is a motor nerve", "b- Runs backward between the abductor digiti minimi and the flexor digiti minimi", "c- Passes laterally within the concavity of the deep palmar arch", "d- The nerve lies between the long flexor tendons and in front of the metacarpal bones and interosseous Muscles", "e- All the above"], correct: "e- All the above" }
-        ];
+         ];
 
         let studentInfo = { name: "", telegram: "" };
         let userAnswers = {};
+        // متغير لمراقبة حالة الامتحان (هل بدأ أم لا)
+        let examStarted = false;
+
+        function validateName(name) {
+            let cleanName = name.trim();
+            let validChars = /^[\u0600-\u06FFa-zA-Z\s]+$/;
+            if (!validChars.test(cleanName)) return "⛔ الاسم يجب أن يحتوي على أحرف فقط (بدون أرقام أو رموز).";
+            let parts = cleanName.split(/\s+/).filter(part => part.length > 0);
+            if (parts.length < 3) return "⛔ يرجى كتابة الاسم الثلاثي الكامل.";
+            for (let part of parts) {
+                if (part.length < 2) return "⛔ يرجى كتابة اسمك بشكل صحيح";
+            }
+            return true;
+        }
 
         function startExam() {
             const nameInput = document.getElementById('studentName').value;
             const teleInput = document.getElementById('telegramID').value;
 
-            if(nameInput.trim() === "" || teleInput.trim() === "") {
-                alert("Please enter your Name and Telegram ID.");
+            const validationResult = validateName(nameInput);
+            if (validationResult !== true) {
+                alert(validationResult);
+                return;
+            }
+
+            if(teleInput.trim() === "") {
+                alert("Please enter your Telegram ID (or 'none').");
                 return;
             }
 
             studentInfo.name = nameInput;
             studentInfo.telegram = teleInput;
+            
+            // تفعيل حالة الامتحان
+            examStarted = true;
 
             document.getElementById('loginPanel').classList.add('hidden');
             document.getElementById('examPanel').classList.remove('hidden');
@@ -336,6 +359,42 @@
             userAnswers[questionId] = answer;
         }
 
+        // === كود الحماية الصارم (Page Visibility API) ===
+        // يتم تفعيله فقط إذا كان الامتحان قد بدأ (examStarted = true)
+        document.addEventListener("visibilitychange", function() {
+            if (examStarted && document.hidden) {
+                // المستخدم غادر الصفحة (Home, Tab switch, Minimize)
+                terminateExamDueToCheating();
+            }
+        });
+
+        // دالة إنهاء الامتحان بسبب الغش
+        function terminateExamDueToCheating() {
+            examStarted = false; // إيقاف المراقبة لتجنب التكرار
+            
+            // إخفاء الامتحان وإظهار رسالة الرسوب
+            document.getElementById('examPanel').classList.add('hidden');
+            document.getElementById('resultPanel').classList.remove('hidden');
+            
+            document.getElementById('resultTitle').innerText = "تم إلغاء الامتحان ❌";
+            document.getElementById('resultTitle').style.color = "red";
+            document.getElementById('resultMessage').innerHTML = `
+                لقد قمت بالخروج من صفحة الامتحان.<br>
+                تعتبر <strong>راسباً</strong> (درجة صفر) لمحاولة الغش.<br>
+                تم إرسال تقرير بالحالة.
+            `;
+
+            // إرسال تقرير الغش (درجة صفر)
+            const templateParams = {
+                student_name: studentInfo.name,
+                telegram_id: studentInfo.telegram,
+                final_score: "0 (Cheating Detected - Left App)",
+                total_questions: questions.length
+            };
+
+            emailjs.send(SERVICE_ID, TEMPLATE_ID, templateParams);
+        }
+
         async function submitExam() {
             let missingQuestions = [];
             questions.forEach((q, index) => {
@@ -370,6 +429,9 @@
         }
 
         function processAndSend() {
+            // إيقاف مراقبة الغش لأن الطالب سلم الامتحان
+            examStarted = false;
+
             let score = 0;
             questions.forEach(q => {
                 if(userAnswers[q.id] && userAnswers[q.id].trim() === q.correct.trim()) {
