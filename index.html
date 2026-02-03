@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anatomy - Upper limb exam</title>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+    <script type="text/javascript">
+       (function(){
+          emailjs.init("o-XlLiO769IOYV68R");
+       })();
+    </script>
+
+    <style>
+        /* --- مانع الغش: منع التحديد والنسخ --- */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f2f5;
+            margin: 0;
+            padding: 20px;
+            color: #1c1e21;
+            user-select: none; /* يمنع تحديد النص */
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+        }
+        .container {
+            max-width: 800px;
+            margin: 40px auto;
+            background: #ffffff;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            border: 1px solid #ddd;
+        }
+        h1, h2 {
+            text-align: center;
+            color: #1877f2;
+            margin-bottom: 30px;
+        }
+        .english-text {
+            direction: ltr;
+            text-align: left;
+            font-family: 'Times New Roman', Times, serif;
+            font-size: 18px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: bold;
+            font-size: 16px;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        input[type="text"]:focus {
+            border-color: #1877f2;
+            outline: none;
+        }
+        .telegram-note {
+            background-color: #eef3f8;
+            border-right: 4px solid #1877f2;
+            padding: 12px;
+            margin-top: 10px;
+            border-radius: 4px;
+            font-size: 13px;
+            color: #444;
+            line-height: 1.5;
+        }
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            background-color: #1877f2;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 18px;
+            font-weight: bold;
+            margin-top: 30px;
+            transition: background-color 0.3s;
+        }
+        .btn:hover {
+            background-color: #166fe5;
+        }
+        .btn-disabled {
+            background-color: #ccc !important;
+            cursor: not-allowed;
+        }
+        .question-box {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            background-color: #f9f9f9;
+        }
+        .options-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .options-list li {
+            margin: 10px 0;
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            transition: background 0.2s;
+        }
+        .options-list li:hover {
+            background-color: #e7f3ff;
+            border-color: #1877f2;
+        }
+        .options-list li label {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            cursor: pointer;
+            font-weight: normal;
+            margin: 0;
+            box-sizing: border-box;
+        }
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body oncontextmenu="return false;">
+
+    <div class="container" id="loginPanel">
+        <h1>Dr. Issam Exam (Upper Limb)</h1>
+        <div class="form-group">
+            <label>الاسم الثلاثي (Full Name):</label>
+            <input type="text" id="studentName" placeholder="مثال: محمد أحمد علي">
+        </div>
+        <div class="form-group">
+            <label>معرف التيليجرام (Telegram User):</label>
+            <input type="text" id="telegramID" placeholder="@username">
+            <div class="telegram-note">
+                <strong>ملاحظة:</strong> معرف التيليكرام سيستخدم للتواصل معك في حال كنت الأعلى درجة. 
+                <br>✍️ يمكنك كتابة <strong>none</strong> في الخانة في حال لم يكن لديك معرف أو رغبت بعدم مشاركته.
+            </div>
+        </div>
+        <button class="btn" onclick="startExam()">Start Exam</button>
+    </div>
+
+    <div class="container hidden" id="examPanel">
+        <h2>Questions (100 MCQ)</h2>
+        <div id="questionsContainer" class="english-text"></div>
+        <button id="submitBtn" class="btn" onclick="submitExam()">Submit Answers</button>
+    </div>
+
+    <div class="container hidden" id="resultPanel">
+        <h2 id="resultTitle">Processing...</h2>
+        <p id="resultMessage" style="text-align: center; font-size: 18px;">
+            Please wait...
+        </p>
+    </div>
+
+    <script>
+        // === مانع الغش: تحذير عند محاولة الخروج من الصفحة ===
+        window.onbeforeunload = function() {
+            return "هل أنت متأكد من الخروج؟ قد يتم إلغاء امتحانك.";
+        };
+
+        const SERVICE_ID = "service_svl2igw";
+        const TEMPLATE_ID = "template_hib0kla";
+
+        const questions = [
+            { id: 1, text: "1. Regarding the axillary artery:", type: "mcq", options: ["a- Subclavian artery continues as the axillary artery at the lateral border of teres major muscle.", "b- Pectoralis major muscle divides the axillary artery into three parts.", "c- The cords of the brachial plexus are anterior to the second part of the axillary artery.", "d- Subscapular artery runs downwards on the posterior axillary wall to the inferior angle of the scapula."], correct: "d- Subscapular artery runs downwards on the posterior axillary wall to the inferior angle of the scapula." },
+            { id: 2, text: "2. Which one of the following is not a character of the arteries of upper limb?", type: "mcq", options: ["a- The brachial artery divides into radial and ulnar arteries at the level of the neck of the radius.", "b- The profunda brachii artery runs in the radial groove.", "c- The brachial artery is superficial to the bicipital aponeurosis.", "d- The radial artery may branch off higher than the usual level."], correct: "c- The brachial artery is superficial to the bicipital aponeurosis." },
+            { id: 3, text: "3. Thenar muscle wasting in carpal tunnel syndrome is due to injury of:", type: "mcq", options: ["a- Palmar cutaneous branch of median nerve.", "b- Superficial branch of ulnar nerve.", "c- Recurrent branch of median nerve.", "d- Metacarpal branches of median nerve."], correct: "c- Recurrent branch of median nerve." },
+            { id: 4, text: "4. Regarding the forearm:", type: "mcq", options: ["a- The annular ligament of the elbow blends with the ulnar collateral ligament.", "b- The bicipital aponeurosis separates the superficial median cubital vein from the deeper brachial artery.", "c- The ulna articulates with the carpal bones.", "d- The distal radio-ulnar joint communicates with the carpal joints."], correct: "b- The bicipital aponeurosis separates the superficial median cubital vein from the deeper brachial artery." },
+            { id: 5, text: "5. Fractured upper ulna may affect the attachment of the followings except:", type: "mcq", options: ["a- Brachialis.", "b- Triceps.", "c- Supinator.", "d- Brachioradialis."], correct: "d- Brachioradialis." },
+            { id: 6, text: "6. Regarding bones of upper limb:", type: "mcq", options: ["a- The radial groove is situated on the radius.", "b- The capitulum articulates with the ulna.", "c- The flexor retinaculum takes attachment from four of the carpal bones.", "d- Deltoid tuberosity lies halfway down the medial aspect of humeral shaft."], correct: "c- The flexor retinaculum takes attachment from four of the carpal bones." },
+            { id: 7, text: "7. Which one of the following is not a character of the clavipectoral fascia?", type: "mcq", options: ["a- It is a strong sheet of connective tissue.", "b- It continues downward as the suspensory ligament of the axilla.", "c- It encloses two muscles between its layers.", "d- It is pierced by the medial pectoral nerve."], correct: "d- It is pierced by the medial pectoral nerve." },
+            { id: 8, text: "8. The skin of pectoral region is characterized by:", type: "mcq", options: ["a- C4 gives cutaneous innervation to the skin above the level of manubriosternal joint.", "b- No branch of axillary artery supplies the skin.", "c- Infected wound in this area cause lymphadenitis of lateral group of axillary nodes.", "d- The first thoracic nerve contributes to the cutaneous nerve supply of the thoracic wall."], correct: "a- C4 gives cutaneous innervation to the skin above the level of manubriosternal joint." },
+            { id: 9, text: "9. If we exclude anastomosis in the breast, occlusion of the 3rd part of axillary artery will affect ---------- of the breast tissue:", type: "mcq", options: ["a- Lateral 1/2.", "b- Medial 1/2.", "c- Nothing.", "d- Nipple."], correct: "c- Nothing." },
+            { id: 10, text: "10. Regarding brachial plexus:", type: "mcq", options: ["a- It is formed by the union of the anterior rami of the lower four cervical spinal nerves.", "b- Divisions and cords of the plexus lie in the axilla above and lateral to the first part of the axillary artery.", "c- Long thoracic nerve descends in front of the axillary sheath to reach the lateral surface of serratus muscle.", "d- Suprascapular nerve passes beneath the suprascapular ligament to reach the supraspinous fossa."], correct: "d- Suprascapular nerve passes beneath the suprascapular ligament to reach the supraspinous fossa." },
+            { id: 11, text: "11. Regarding the joints:", type: "mcq", options: ["a- Sutures of the skull is an example of the fibrous joints.", "b- The union between the epiphysis and diaphysis of a growing bone is an example of the secondary cartilaginous joints.", "c- Symphysis pubis is an example of the primary cartilaginous joints.", "d- Superior radioulnar joint is an example of the plane synovial joints."], correct: "a- Sutures of the skull is an example of the fibrous joints." },
+            { id: 12, text: "12. A stab wound in the 3rd intercostal space at midaxillary line might be complicated by:", type: "mcq", options: ["a- Winged scapula.", "b- Loss of arm adduction.", "c- Lymphadenitis of the lateral axillary nodes.", "d- Impaired arm flexion."], correct: "a- Winged scapula." },
+            { id: 13, text: "13. The movement which escapes harm in upper trunk brachial plexus injury is:", type: "mcq", options: ["a- Abduction of the shoulder.", "b- Medial rotation of the shoulder.", "c- Supination.", "d- Elbow flexion."], correct: "b- Medial rotation of the shoulder." },
+            { id: 14, text: "14. Regarding articulation of the clavicle:", type: "mcq", options: ["a- The medial end articulates with the manubrium by fibrous joint.", "b- The medial end articulates with the manubrium by cartilaginous joint.", "c- The medial end articulates with the body of the sternum by saddle joint.", "d- The lateral end articulates with the acromion by plane synovial articulation."], correct: "d- The lateral end articulates with the acromion by plane synovial articulation." },
+            { id: 15, text: "15. If we cut the anterior primary ramus of C7, which of the following nerves will not be affected?", type: "mcq", options: ["a- Suprascapular.", "b- Musculocutaneous.", "c- Median.", "d- Long thoracic."], correct: "a- Suprascapular." },
+            { id: 16, text: "16. The divisions of the brachial plexus are found:", type: "mcq", options: ["a- In the axilla.", "b- In the posterior cervical triangle.", "c- Between the anterior and middle scalenes.", "d- Behind the middle scalenus."], correct: "b- In the posterior cervical triangle." },
+            { id: 17, text: "17. What action will be most affected in infraspinatus muscle paralysis?", type: "mcq", options: ["a- Abduction of the humerus.", "b- Adduction of the humerus.", "c- Lateral rotation of the humerus.", "d- Medial rotation of the humerus."], correct: "c- Lateral rotation of the humerus." },
+            { id: 18, text: "18. A fracture at the surgical neck of the humerus may damage -----:", type: "mcq", options: ["a- Radial nerve.", "b- Axillary nerve.", "c- Ulnar nerve.", "d- Median nerve."], correct: "b- Axillary nerve." },
+            { id: 19, text: "19. By dissecting the anterior group of the axillary lymph nodes, you might injure:", type: "mcq", options: ["a- Upper part of the axillary vein.", "b- Lower part of the axillary vein.", "c- Subscapular artery.", "d- Lateral thoracic artery."], correct: "d- Lateral thoracic artery." },
+            { id: 20, text: "20. A cancer in the medial quadrants of the breast may spread to:", type: "mcq", options: ["a- Pectoral group of the axillary lymph nodes.", "b- Subscapular group of the axillary lymph nodes.", "c- Central group of the axillary lymph nodes.", "d- Parasternal group of lymph nodes."], correct: "d- Parasternal group of lymph nodes." },
+            { id: 21, text: "21. Lymphatics that accompany cephalic vein drain into the:", type: "mcq", options: ["a- Pectoral group of the axillary lymph nodes.", "b- Subscapular group of the axillary lymph nodes.", "c- Central group of the axillary lymph nodes.", "d- Infraclavicular group of the axillary lymph nodes."], correct: "d- Infraclavicular group of the axillary lymph nodes." },
+            { id: 22, text: "22. Trapezius paralysis results from injury of ----------:", type: "mcq", options: ["a- Cranial accessory nerve.", "b- Spinal accessory nerve.", "c- Long thoracic nerve.", "d- Dorsal scapular nerve."], correct: "b- Spinal accessory nerve." },
+            { id: 23, text: "23. Paralysis of deltoid muscle causes:", type: "mcq", options: ["a- Loss of abduction of the arm from zero to 15°.", "b- Loss of abduction of the arm from 15° to 90°.", "c- Loss of abduction of the arm from zero to 90°.", "d- Loss of abduction of the arm from 90° to 180°."], correct: "b- Loss of abduction of the arm from 15° to 90°." },
+            { id: 24, text: "24. A patient with musculocutaneous nerve injury may have all except:", type: "mcq", options: ["a- Flat shoulder.", "b- Impaired supination.", "c- Impaired sensation along the lateral side of the forearm.", "d- Impaired elbow flexion."], correct: "a- Flat shoulder." },
+            { id: 25, text: "25. Rotator cuff muscles means:", type: "mcq", options: ["a- Supraspinatus + infraspinatus + teres major + teres minor.", "b- Supraspinatus + infraspinatus + subscapularis + teres minor.", "c- Supraspinatus + subscapularis + teres major + teres minor.", "d- Subscapularis + infraspinatus + teres major + teres minor."], correct: "b- Supraspinatus + infraspinatus + subscapularis + teres minor." },
+            { id: 26, text: "26. The brachial artery:", type: "mcq", options: ["a- Bifurcates opposite neck of humerus.", "b- Is deep throughout its entire course.", "c- In the cubital fossa, it lies medial to the biceps tendon.", "d- The median nerve crosses in front of the artery from medial to lateral."], correct: "c- In the cubital fossa, it lies medial to the biceps tendon." },
+            { id: 27, text: "27. The lateral cutaneous nerve of the forearm is derived from the:", type: "mcq", options: ["a- C5.", "b- C6.", "c- C7.", "d- C 5, 6 and 7."], correct: "d- C 5, 6 and 7." },
+            { id: 28, text: "28. Which one of the following is not a feature of the subacromial bursa?", type: "mcq", options: ["a- It is located inferior to the coracoacromial arch.", "b- It lies superior to supraspinatus tendon.", "c- When inflamed causes pain which increases as the patient extends his shoulder.", "d- It lies superomedial to the greater humeral tuberosity."], correct: "c- When inflamed causes pain which increases as the patient extends his shoulder." },
+            { id: 29, text: "29. Which of the following structures crosses superficial to the flexor retinaculum?", type: "mcq", options: ["a- Median nerve.", "b- Ulnar nerve.", "c- Flexor carpi radialis.", "d- Flexor pollicis longus."], correct: "b- Ulnar nerve." },
+            { id: 30, text: "30. Fist making will not be affected if ---------- was paralyzed:", type: "mcq", options: ["a- Brachioradialis.", "b- Extensor carpi ulnaris.", "c- Long flexors of the fingers.", "d- Extensor carpi radialis brevis."], correct: "a- Brachioradialis." },
+            { id: 31, text: "31. Which one of the following muscle paralysis will not affect elbow movement?", type: "mcq", options: ["a- Pronator teres.", "b- Anconeus.", "c- Flexor digitorum profundus.", "d- Flexor carpi radialis."], correct: "c- Flexor digitorum profundus." },
+            { id: 32, text: "32. Ulnar artery at the wrist:", type: "mcq", options: ["a- Lies lateral to ulnar nerve.", "b- Lies medial to ulnar nerve.", "c- Lies medial to pisiform.", "d- Lies deep to flexor retinaculum."], correct: "a- Lies lateral to ulnar nerve." },
+            { id: 33, text: "33. Regarding lymph nodes, the lateral side of the arm and forearm is drained initially to the:", type: "mcq", options: ["a- Supratrochlear nodes.", "b- Posterior axillary nodes.", "c- Infraclavicular nodes.", "d- Central axillary nodes."], correct: "c- Infraclavicular nodes." },
+            { id: 34, text: "34. In the cubital fossa:", type: "mcq", options: ["a- Median nerve lies lateral to the biceps tendon.", "b- Radial nerve and the interosseous branch lie beneath the brachialis.", "c- Brachial artery lies beneath biceps aponeurosis.", "d- Radial artery passes between heads of pronator teres."], correct: "c- Brachial artery lies beneath biceps aponeurosis." },
+            { id: 35, text: "35. A patient presented to hospital after having a direct blow on the back of his right humerus. X ray showed severe comminuted fracture of the mid-shaft, which of the followings may follow?", type: "mcq", options: ["a- Hand of benediction.", "b- Wrist drop.", "c- Erb's palsy.", "d- Claw hand."], correct: "b- Wrist drop." },
+            { id: 36, text: "36. Which one of the following groups of axillary lymph nodes affected firstly from a medial breast cancer?", type: "mcq", options: ["a- Central group.", "b- Apical group.", "c- Posterior group.", "d- Anterior group."], correct: "d- Anterior group." },
+            { id: 37, text: "37. Fractured medial humeral epicondyle is most likely to damage:", type: "mcq", options: ["a- Ulnar nerve.", "b- Median nerve.", "c- Radial nerve.", "d- Medial cutaneous nerve."], correct: "a- Ulnar nerve." },
+            { id: 38, text: "38. Regarding the blood supply of the forearm:", type: "mcq", options: ["a- The radial artery is the larger terminal branch of brachial.", "b- The radial artery runs under brachialis.", "c- The radial artery passes in the floor of the snuffbox.", "d- The radial artery has no elbow anastomosis."], correct: "c- The radial artery passes in the floor of the snuffbox." },
+            { id: 39, text: "39. Which one of the following is not a feature of elbow joint?", type: "mcq", options: ["a- It communicates with the superior radioulnar joint.", "b- The medial collateral ligament is divided into two bands.", "c- Its carrying angle is 170°.", "d- It is supplied by musculocutaneous, radial, median and ulnar nerves."], correct: "b- The medial collateral ligament is divided into two bands." },
+            { id: 40, text: "40. In assessing the posterior interosseous nerve, it is best to examine:", type: "mcq", options: ["a- Wrist extension.", "b- Thumb extension.", "c- Index extension.", "d- Wrist flexion."], correct: "b- Thumb extension." },
+            { id: 41, text: "41. Concerning the characters of palmar skin, which statement is most correct?", type: "mcq", options: ["a- Contains plenty of sebaceous glands.", "b- Attached loosely by areolar tissues.", "c- Receives the insertion of palmaris brevis muscle.", "d- Palmar aponeurosis acts to corrugate the skin."], correct: "c- Receives the insertion of palmaris brevis muscle." },
+            { id: 42, text: "42. When exploring the hand, your field will show:", type: "mcq", options: ["a- Three fibrous septa.", "b- Flexor retinaculum converts the carpal concavity into a tunnel.", "c- Fibrous flexor sheath extends to distal phalanx.", "d- Borders of palmar aponeurosis are continuous with superficial fascia."], correct: "b- Flexor retinaculum converts the concavity on the anterior surface of the carpus into a tunnel." },
+            { id: 43, text: "43. Regarding synovial flexor sheaths:", type: "mcq", options: ["a- Sheath of flexor carpi radialis is radial bursa.", "b- Sheath of flexor carpi ulnaris is ulnar bursa.", "c- Both radial and ulnar bursae start a fingerbreadth proximal to flexor retinaculum.", "d- Digital sheaths commence at proximal transverse crease."], correct: "c- Both of radial and ulnar bursae started a fingerbreadth proximal to the flexor retinaculum." },
+            { id: 44, text: "44. Regarding long flexor tendons of the fingers:", type: "mcq", options: ["a- All of them pass beneath flexor retinaculum.", "b- Superficialis inserted into distal phalanges.", "c- Profundus inserted into middle phalanges.", "d- Profundus divides to pass around superficialis."], correct: "a- All of them pass beneath flexor retinaculum." },
+            { id: 45, text: "45. Which of the following muscles will escape paralysis if radial nerve was cut in the lower arm?", type: "mcq", options: ["a- Anconeus.", "b- Brachioradialis.", "c- Extensor digitorum.", "d- Supinator."], correct: "a- Anconeus." },
+            { id: 46, text: "46. Pick out the odd (incorrect) selection regarding palmar fascial spaces:", type: "mcq", options: ["a- They are three in number.", "b- Thenar and midpalmar spaces are closed off from forearm.", "c- Hypothenar space contains hypothenar muscles.", "d- The thenar space contains all the thenar muscles."], correct: "d- The thenar space contains all the thenar muscles." },
+            { id: 47, text: "47. A dinner-fork deformity is a feature of:", type: "mcq", options: ["a- Anterior displacement of radius.", "b- Smith's fracture.", "c- Radial artery compression.", "d- Colle's fracture."], correct: "d- Colle's fracture." },
+            { id: 48, text: "48. Regarding muscles of the back and scapular region:", type: "mcq", options: ["a- Trapezius attached to superior angle.", "b- Levator scapulae inserted opposite infraspinatus fossa.", "c- Teres major is a rotator cuff muscle.", "d- The rhomboid muscles are innervated by the dorsal scapular nerve."], correct: "d- The rhomboid muscles are innervated by the dorsal scapular nerve." },
+            { id: 49, text: "49. Which one of the following is not a feature of the anatomical spaces?", type: "mcq", options: ["a- Triangular space bounded by teres minor.", "b- Posterior circumflex humeral artery passes through triangular space.", "c- Quadrilateral space bounded by subscapularis.", "d- Axillary nerve passes through quadrilateral space."], correct: "b- Posterior circumflex humeral artery passes backward through the triangular space." },
+            { id: 50, text: "50. While exploring the axilla, your field will show:", type: "mcq", options: ["a- Axillary vein lateral to artery.", "b- Lateral thoracic artery along pectoralis major.", "c- Third part of axillary artery ends at lower border of teres major.", "d- Brachial plexus trunks in the axilla."], correct: "c- Third part of the axillary artery ends at the lower border of teres major." },
+            { id: 51, text: "51. The clavipectoral fascia is penetrated by which artery?", type: "mcq", options: ["a- Anterior circumflex humeral", "b- Axillary", "c- Subscapular", "d- Thoracoacromial"], correct: "d- Thoracoacromial" },
+            { id: 52, text: "52. In lymphatic drainage of the breast, the major portion (about 75%) enters eventually into which group of nodes?", type: "mcq", options: ["a- Central axillary", "b- Deltopectoral", "c- Parasternal", "d- Subscapular"], correct: "a- Central axillary" },
+            { id: 53, text: "53. In the axilla the pectoralis minor is a landmark, being closely related to all of the following structures except:", type: "mcq", options: ["a- Cephalic vein", "b- Cords of the brachial plexus", "c- Lateral thoracic artery", "d- Medial pectoral nerve"], correct: "a- Cephalic vein" },
+            { id: 54, text: "54. The quadrilateral space is bounded by the following structures except:", type: "mcq", options: ["a- Deltoid", "b- Surgical neck of humerus", "c- Long head of triceps", "d- Teres major"], correct: "a- Deltoid" },
+            { id: 55, text: "55. Coracoid process of scapula gives attachment to all of the following muscles, EXCEPT:", type: "mcq", options: ["a- Pectoralis minor", "b- Short head of Biceps brachii", "c- Long head of Biceps brachii", "d- Coracobrachialis"], correct: "c- Long head of Biceps brachii" },
+            { id: 56, text: "56. All of the following parts of the scapula can be felt EXCEPT:", type: "mcq", options: ["a- Crest of the spine", "b- Upper border", "c- Inferior angle", "d- Tip of the coracoid process"], correct: "b- Upper border" },
+            { id: 57, text: "57. The axilla contains all of the following EXCEPT:", type: "mcq", options: ["a- Axillary artery", "b- Axillary vein", "c- Trunks of the brachial plexus", "d- Fat"], correct: "c- Trunks of the brachial plexus" },
+            { id: 58, text: "58. The breast is supplied by:", type: "mcq", options: ["a- Lateral thoracic artery", "b- Internal thoracic artery", "c- Intercostal arteries", "d- All of the above"], correct: "d- All of the above" },
+            { id: 59, text: "59. All of the following muscles participate in scapular rotation except:", type: "mcq", options: ["a- Trapezius", "b- Levator scapulae", "c- Serratus anterior", "d- Pectoralis minor"], correct: "d- Pectoralis minor" },
+            { id: 60, text: "60. ERB-DUCHENNE PALSY:", type: "mcq", options: ["a- Causes excessive traction or even tearing of C5 and 6 roots of the plexus", "b- The position of the upper limb in this condition has been likened to that of a porter or waiter hinting for a tip", "c- There will be a loss of sensation down the lateral side of the arm", "d- Teres minor will be paralyzed", "e- All of the above"], correct: "e- All of the above" },
+            { id: 61, text: "61. Injury to the ulnar nerve at the elbow:", type: "mcq", options: ["a- The muscles of the thenar eminence and the first two lumbricals will be paralyzed", "b- There will be wrist drop", "c- Leave a relatively efficient hand", "d- The sensation over the lateral part of the hand is lost", "e- There will be no trophic changes"], correct: "c- Leave a relatively efficient hand" },
+            { id: 62, text: "62. Flexor digitorum profundus:", type: "mcq", options: ["a- Originate from two heads", "b- Is inserted into the sides of the middle phalanx", "c- Assist in flexing the proximal Phalanx", "d- Is a muscle of the superficial layer", "e- None of the above"], correct: "e- None of the above" },
+            { id: 63, text: "63. Radial Nerve:", type: "mcq", options: ["a- Its deep branch supplies the extensor carpi radialis brevis and the supinator in the cubital fossa and all the extensor muscles in the posterior compartment of the forearm", "b- Characteristically gives off its branches some distance proximal to the part to be innervated", "c- In the axilla it gives off four branches and In the spiral groove of the humerus it gives off three branches", "d- a & b", "e- The superficial radial nerve is sensory and motor nerve"], correct: "d- a & b" },
+            { id: 64, text: "64. The extensor expansion:", type: "mcq", options: ["a- Is formed near the middle IPJ", "b- Receives the tendon of insertion of the corresponding interosseous muscle on each side", "c- Further distally, receives the tendon of the lumbrical m. on the medial Side", "d- b & c", "e- All of the above"], correct: "b- Receives the tendon of insertion of the corresponding interosseous muscle on each side" },
+            { id: 65, text: "65. Supinator:", type: "mcq", options: ["a- Is innervated by deep branch of radial nerve", "b- Is the main supinator of forearm", "c- Originated from post., lat. & ant. Aspect of the neck & shaft of radius", "d- Inserted to lat. side of radius"], correct: "a- Is innervated by deep branch of radial nerve" },
+            { id: 66, text: "66. The roots of brachial plexus are the anterior primary rami of:", type: "mcq", options: ["a- C5-T1", "b- C7-T1", "c- C5-T1", "d- C5-8", "e- None of the above"], correct: "a- C5-T1" },
+            { id: 67, text: "67. Without radial artery, how would the hand survive for the rest of his life (after ligation)?", type: "mcq", options: ["a- Because radial artery is not important for hand circulation", "b- Because there is anastomosis between radial & ulnar arteries above the wrist", "c- Because there is anastomosis between radial & ulnar arteries in the palmar arches", "d- The hand will not survive", "e- Interosseous arteries will replace the ligated artery"], correct: "c- Because there is anastomosis between radial & ulnar arteries in the palmar arches" },
+            { id: 68, text: "68. The superficial palmar arch:", type: "mcq", options: ["a- Lies deep to the long flexor tendons", "b- Is mainly furnished by blood from the radial artery", "c- Gives four palmar digital arteries", "d- Lies in the concavity of ulnar nerve", "e- Lies immediately deep to the palmar aponeurosis"], correct: "e- Lies immediately deep to the palmar aponeurosis" },
+            { id: 69, text: "69. The radial pulse is best felt at the front of the lower forearm because the artery:", type: "mcq", options: ["a- Is superficial in this position", "b- Lies against the lower radius where it could be compressed", "c- Medium sized", "d- All of the above", "e- Only A & B are correct"], correct: "d- All of the above" },
+            { id: 70, text: "70. Which of the following arterial pulses could NOT be felt in the upper limb?", type: "mcq", options: ["a- Axillary artery", "b- Profunda brachii", "c- Brachial artery in the cubital fossa", "d- Brachial artery in the midarm", "e- Radial artery"], correct: "b- Profunda brachii" },
+            { id: 71, text: "71. Carpal tunnel syndrome causes:", type: "mcq", options: ["a- Wrist drop", "b- Paralysis of all muscles of the hand", "c- Weakness of the thenar muscles", "d- Waiter's tip position"], correct: "c- Weakness of the thenar muscles" },
+            { id: 72, text: "72. Shoulder joint stability is maintained by the followings EXCEPT:", type: "mcq", options: ["a- Long head of triceps", "b- Long head of biceps", "c- Glenohumeral ligaments", "d- Labrum glenoidale", "e- Rotator cuff"], correct: "a- Long head of triceps" },
+            { id: 73, text: "73. Regarding the bicipital aponeurosis, which is INCORRECT?", type: "mcq", options: ["a- Is an extension of the biceps tendon", "b- Blends with the deep fascia covering the extensor muscles of the forearm", "c- Passes over the brachial artery", "d- Crosses the front of the elbow", "e- Separates the median nerve from the median cubital vein"], correct: "b- Blends with the deep fascia covering the extensor muscles of the forearm" },
+            { id: 74, text: "74. Anastomosis around the scapula connects the following arteries with each other EXCEPT:", type: "mcq", options: ["a- Suprascapular", "b- Deep branch of transverse cervical", "c- Posterior circumflex humeral", "d- Subscapular"], correct: "c- Posterior circumflex humeral" },
+            { id: 75, text: "75. Which joint has the articular disc?", type: "mcq", options: ["a- Shoulder joint", "b- Sternoclavicular joint", "c- Elbow joint", "d- MCPJ"], correct: "b- Sternoclavicular joint" },
+            { id: 76, text: "76. Which joint has the articular labrum?", type: "mcq", options: ["a- Temporomandibular joint", "b- Elbow joint", "c- Shoulder joint", "d- Radiocarpal joint", "e- Hip joint"], correct: "c- Shoulder joint" },
+            { id: 77, text: "77. The basilic vein:", type: "mcq", options: ["a- Arises from the lateral side of dorsal venous rete of hand", "b- Runs along the medial of biceps brachii", "c- Accompanies the ulnar artery", "d- Drains into the subclavian vein", "e- Receives the superficial veins of the hand and lateral side of the forearm"], correct: "b- Runs along the medial of biceps brachii" },
+            { id: 78, text: "78. The radial nerve supplies:", type: "mcq", options: ["a- All of the flexor muscles of upper limb", "b- The extensor muscles of arm only", "c- All of the extensor muscles of upper limb", "d- The extensor muscles of forearm only", "e- The muscles of the hand"], correct: "c- All of the extensor muscles of upper limb" },
+            { id: 79, text: "79. The axillary artery:", type: "mcq", options: ["a- Begins from the lateral border of the 1st rib", "b- Gives off the internal thoracic artery", "c- Ends at the lower border of the teres minor", "d- Its branches distribute to the pectoralis major m. only", "e- Gives off the anterior intercostal artery"], correct: "a- Begins from the lateral border of the 1st rib" },
+            { id: 80, text: "80. The cephalic vein:", type: "mcq", options: ["a- Arises from the medial side of dorsal venous rete of hand", "b- Accompany the radial artery", "c- Drain into the brachial v.", "d- Receives the superficial veins of the hand and the medial side of the forearm", "e- Runs along the lateral side of the biceps brachii"], correct: "e- Runs along the lateral side of the biceps brachii" },
+            { id: 81, text: "81. Regarding the nerves of the upper limb, which is false:", type: "mcq", options: ["a- The median nerve is easily damaged as it crosses the wrist", "b- The median nerve supplies all the muscles of the thenar eminence except the adductor pollicis", "c- The median and ulnar nerves give off no branches in the axilla", "d- The median and radial nerves supply flexor digitorum profundus muscles", "e- The ulnar nerve is motor to all the interosseus muscles of the hand"], correct: "d- The median and radial nerves supply flexor digitorum profundus muscles" },
+            { id: 82, text: "82. The triceps brachii is mainly supplied by:", type: "mcq", options: ["a- Axillary artery", "b- Posterior circumflex humeral artery", "c- Profunda brachii artery", "d- Circumflex scapular artery", "e- Anterior circumflex humeral artery"], correct: "c- Profunda brachii artery" },
+            { id: 83, text: "83. Deep palmar arch:", type: "mcq", options: ["a- Is formed by the anastomosis of the terminal part of the radial artery with deep branch of the ulnar artery", "b- Is formed by the anastomosis of the terminal part of the ulnar artery with deep branch of the radial artery", "c- Lies superficial to the tendons of flexor muscles", "d- Lies superficial to the lumbricales", "e- Gives off three common palmar digital arteries"], correct: "a- Is formed by the anastomosis of the terminal part of the radial artery with deep branch of the ulnar artery" },
+            { id: 84, text: "84. Which nerve distributes to the skin of little finger?", type: "mcq", options: ["a- Median nerve", "b- Radial nerve", "c- Ulnar nerve", "d- Axillary nerve", "e- Medial cutaneous nerve of forearm"], correct: "c- Ulnar nerve" },
+            { id: 85, text: "85. The female breast:", type: "mcq", options: ["a- Has a nipple that is usually located opposite the 6th intercostal space", "b- Has Cooper ligament that suspends the breast", "c- Has about 5 lactiferous sinuses", "d- Has a bed formed mainly by the serratus anterior muscle", "e- Its lymphatics drain mainly in the parasternal lymph nodes"], correct: "b- Has Cooper ligament that suspends the breast" },
+            { id: 86, text: "86. The brachial plexus has:", type: "mcq", options: ["a- Eight rami (roots)", "b- Five trunks", "c- Six divisions", "d- Four cords", "e- None of the above"], correct: "c- Six divisions" },
+            { id: 87, text: "87. Of the followings, the only nerve which will affect sensation if injured is:", type: "mcq", options: ["a- Upper subscapular", "b- Thoracodorsal", "c- Lower subscapular", "d- Medial pectoral", "e- Medial root of median nerve"], correct: "e- Medial root of median nerve" },
+            { id: 88, text: "88. Section of the musculocutaneous nerve at midarm level will abolish sensation in:", type: "mcq", options: ["a- Shoulder skin", "b- Medial arm skin", "c- Lateral forearm skin", "d- Medial forearm skin", "e- Thumb skin"], correct: "c- Lateral forearm skin" },
+            { id: 89, text: "89. The earliest bone to ossify in the body is:", type: "mcq", options: ["a- Humerus", "b- Radius", "c- Ulna", "d- Clavicle", "e- Femur"], correct: "d- Clavicle" },
+            { id: 90, text: "90. A stab wound in the anterior axillary fold might affect the following EXCEPT:", type: "mcq", options: ["a- Pectoralis major", "b- Teres major", "c- Pectoralis minor", "d- Subclavius", "e- Clavipectoral fascia"], correct: "b- Teres major" },
+            { id: 91, text: "91. In Klumpke's paralysis, the deformity is called:", type: "mcq", options: ["a- Winging of the scapula", "b- Claw hand", "c- Ape hand", "d- Wrist drop", "e- Policeman's tip position"], correct: "b- Claw hand" },
+            { id: 92, text: "92. Which of the following will affect the suprascapular nerve if damaged?", type: "mcq", options: ["a- Roots of the brachial plexus", "b- Upper trunk", "c- Middle trunk", "d- Posterior cord", "e- Lateral cord"], correct: "b- Upper trunk" },
+            { id: 93, text: "93. The root value of the long thoracic nerve is:", type: "mcq", options: ["a- C5", "b- C6", "c- C7", "d- C5, 6 & 7", "e- C5, 6, 7 & 8"], correct: "d- C5, 6 & 7" },
+            { id: 94, text: "94. The anterior (pectoral) group of the axillary lymph nodes is located along the:", type: "mcq", options: ["a- Upper part of the axillary vein", "b- Lower part of the axillary vein", "c- Lateral thoracic artery", "d- Subscapular artery", "e- None of the above"], correct: "c- Lateral thoracic artery" },
+            { id: 95, text: "95. An infected wound in the back above iliac crest level will cause enlargement of:", type: "mcq", options: ["a- Pectoral group of the axillary lymph nodes", "b- Subscapular group of the axillary lymph nodes", "c- Central group of the axillary lymph nodes", "d- Apical group of the axillary lymph nodes", "e- Parasternal lymph nodes"], correct: "b- Subscapular group of the axillary lymph nodes" },
+            { id: 96, text: "96. Infection of thumb nail which drains along cephalic vein might cause inflammation of:", type: "mcq", options: ["a- Pectoral group of the axillary lymph nodes", "b- Subscapular group of the axillary lymph nodes", "c- Central group of the axillary lymph nodes", "d- Apical group of the axillary lymph nodes", "e- Posterior group of the axillary lymph nodes"], correct: "d- Apical group of the axillary lymph nodes" },
+            { id: 97, text: "97. Cancer in the medial zone of the breast spreads to:", type: "mcq", options: ["a- Pectoral group of the axillary lymph nodes", "b- Subscapular group of the axillary lymph nodes", "c- Central group of the axillary lymph nodes", "d- Apical group of the axillary lymph nodes", "e- Parasternal lymph nodes"], correct: "e- Parasternal lymph nodes" },
+            { id: 98, text: "98. Winged scapula result from injury of the:", type: "mcq", options: ["a- Axillary nerve", "b- Suprascapular nerve", "c- Upper subscapular nerve", "d- Long thoracic nerve", "e- Thoracodorsal nerve"], correct: "d- Long thoracic nerve" },
+            { id: 99, text: "99. The medial (ulnar collateral) ligament:", type: "mcq", options: ["a- Its anterior band passes from the medial epicondyle of the humerus to the anterior margin of the coronoid process", "b- Its posterior band passes from the medial epicondyle of the humerus to the posterior side of the olecranon", "c- a & b", "d- Its transverse band passes between the ulnar attachments of the anterior & posterior bands", "e- None of the above"], correct: "c- a & b" },
+            { id: 100, text: "100. Deep branch of the ulnar nerve:", type: "mcq", options: ["a- Is a motor nerve", "b- Runs backward between the abductor digiti minimi and the flexor digiti minimi", "c- Passes laterally within the concavity of the deep palmar arch", "d- The nerve lies between the long flexor tendons and in front of the metacarpal bones and interosseous Muscles", "e- All the above"], correct: "e- All the above" }
+        ];
+
+        let studentInfo = { name: "", telegram: "" };
+        let userAnswers = {};
+
+        function startExam() {
+            const nameInput = document.getElementById('studentName').value;
+            const teleInput = document.getElementById('telegramID').value;
+
+            if(nameInput.trim() === "" || teleInput.trim() === "") {
+                alert("Please enter your Name and Telegram ID.");
+                return;
+            }
+
+            studentInfo.name = nameInput;
+            studentInfo.telegram = teleInput;
+
+            document.getElementById('loginPanel').classList.add('hidden');
+            document.getElementById('examPanel').classList.remove('hidden');
+            
+            if (document.documentElement.requestFullscreen) {
+                document.documentElement.requestFullscreen().catch((err) => {});
+            }
+            
+            renderQuestions();
+        }
+
+        function renderQuestions() {
+            const container = document.getElementById('questionsContainer');
+            let htmlContent = "";
+
+            questions.forEach((q, index) => {
+                let optionsHTML = "";
+                q.options.forEach(opt => {
+                    optionsHTML += `
+                        <li>
+                            <label>
+                                <input type="radio" name="q${q.id}" value="${opt}" onclick="saveAnswer(${q.id}, '${opt}')"> 
+                                ${opt}
+                            </label>
+                        </li>
+                    `;
+                });
+
+                htmlContent += `
+                    <div class="question-box">
+                        <label><strong>${q.text}</strong></label>
+                        <ul class="options-list">
+                            ${optionsHTML}
+                        </ul>
+                    </div>
+                `;
+            });
+            container.innerHTML = htmlContent;
+        }
+
+        function saveAnswer(questionId, answer) {
+            userAnswers[questionId] = answer;
+        }
+
+        async function submitExam() {
+            let missingQuestions = [];
+            questions.forEach((q, index) => {
+                if (!userAnswers.hasOwnProperty(q.id)) {
+                    missingQuestions.push(index + 1);
+                }
+            });
+
+            if (missingQuestions.length > 0) {
+                const msg = `تنبيه: يوجد أسئلة غير مجابة!\n` +
+                            `أرقام الأسئلة المتروكة: [ ${missingQuestions.join(' ، ')} ]\n\n` +
+                            `اضغط "موافق" (OK) للتسليم وتركها فارغة.\n` +
+                            `اضغط "إلغاء" (Cancel) للعودة للإجابة.`;
+                if (!confirm(msg)) return;
+            }
+
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.innerHTML = "جاري التحقق...";
+            submitBtn.classList.add('btn-disabled');
+            
+            try {
+                const response = await fetch('status.txt', { cache: "no-store" });
+                if (!response.ok) {
+                    throw new Error("Exam Closed");
+                }
+                processAndSend();
+            } catch (error) {
+                alert("⛔ عذراً، انتهى وقت الامتحان وتم إغلاق النظام.\nلا يمكن تسليم الإجابة الآن.");
+                submitBtn.innerHTML = "انتهى الوقت";
+                return; 
+            }
+        }
+
+        function processAndSend() {
+            let score = 0;
+            questions.forEach(q => {
+                if(userAnswers[q.id] && userAnswers[q.id].trim() === q.correct.trim()) {
+                    score++;
+                }
+            });
+
+            let percentage = Math.round((score / questions.length) * 100);
+            let finalResultText = `${score} (${percentage}%)`;
+
+            document.getElementById('examPanel').classList.add('hidden');
+            document.getElementById('resultPanel').classList.remove('hidden');
+
+            const templateParams = {
+                student_name: studentInfo.name,
+                telegram_id: studentInfo.telegram,
+                final_score: finalResultText,
+                total_questions: questions.length
+            };
+
+            emailjs.send(SERVICE_ID, TEMPLATE_ID, templateParams)
+                .then(function(response) {
+                    document.getElementById('resultTitle').innerText = "Exam Submitted Successfully ✅";
+                    document.getElementById('resultTitle').style.color = "green";
+                    document.getElementById('resultMessage').innerHTML = `
+                        Thank you <strong>${studentInfo.name}</strong>.<br><br>
+                        Your answers have been recorded.<br>
+                        Good Luck!
+                    `;
+                    window.onbeforeunload = null;
+                }, function(error) {
+                    console.log('FAILED...', error);
+                    alert("Error Details:\n" + JSON.stringify(error));
+                    document.getElementById('resultTitle').innerText = "Submission Failed ❌";
+                    document.getElementById('resultTitle').style.color = "red";
+                });
+        }
+    </script>
+</body>
+</html>
